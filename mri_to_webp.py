@@ -6,7 +6,7 @@ import struct
 #
 # path - mri filepath
 #
-def parse(path: str):
+def parse(path: str, opath: str = None):
     with open(path, "rb") as fs:
         idata = fs.read()
 
@@ -43,11 +43,10 @@ def parse(path: str):
     for bit in idata:
         odata.append(101 ^ bit)
 
-    opath = f"{filepath_noext}_p.webp"
+    opath = opath or f"{filepath_noext}.webp"
+
     with open(opath, "wb") as fs:
         fs.write(bytes(odata))
-
-    print(f"{opath} written")
 
 
 def main(args):
