@@ -1,20 +1,10 @@
-import os
 import re
 import struct
 
 
-#
-# path - mri filepath
-#
-def parse(path: str, opath: str = None):
-    with open(path, "rb") as fs:
-        idata = fs.read()
-
-    dirpath = os.path.dirname(path)
-    name = re.match(r"(\w+)\.\w+$", path).group(1)
-    filepath_noext = os.path.join(dirpath, name)
+def parse_mri_data_to_webp_buffer(data):
     size_list = [0] * 4
-    size = len(idata)
+    size = len(data)
     header_size = size + 7
 
     # little endian byte representation
@@ -22,7 +12,7 @@ def parse(path: str, opath: str = None):
     for i, byte in enumerate(struct.pack("<I", header_size)):
         size_list[i] = byte
 
-    odata = [
+    buffer = [
         82,  # R
         73,  # I
         70,  # F
@@ -40,18 +30,40 @@ def parse(path: str, opath: str = None):
         56,  # 8
     ]
 
-    for bit in idata:
-        odata.append(101 ^ bit)
+    for bit in data:
+        buffer.append(101 ^ bit)
 
+    return buffer
+
+
+def parse_mri_path_to_webp_buffer(path: str):
+    with open(path, "rb") as fs:
+        idata = fs.read()
+
+    return parse_mri_data_to_webp_buffer(idata)
+
+
+#
+# path - mri filepath
+#
+def parse_to_file(path: str, opath: str = None):
+    with open(path, "rb") as fs:
+        data = fs.read()
+
+    buffer = parse_mri_data_to_webp_buffer(data)
+
+    filepath_noext = re.match(r"(.*)\.\w+$", path).group(1)
     opath = opath or f"{filepath_noext}.webp"
 
     with open(opath, "wb") as fs:
-        fs.write(bytes(odata))
+        fs.write(bytes(buffer))
+
+    print(f"{opath} written")
 
 
 def main(args):
     for path in args:
-        parse(path)
+        parse_to_file(path)
 
 
 if __name__ == '__main__':

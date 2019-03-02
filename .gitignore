@@ -1,4 +1,6 @@
 venv
+*.json
+*.mri
 *.pyc
-*.webp
 *.vscode
+*.webp
