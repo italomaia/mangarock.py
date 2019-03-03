@@ -20,7 +20,20 @@ def make_chapter_data_uri(chapter_oid):
     return f"https://api.mangarockhd.com/query/web{query_version}/pages?oid={chapter_oid}"
 
 
-def main(args):
+def get_chapters(args, series_info):
+    chapters = series_info['chapters']
+
+    if args.chapters:
+        of_interest = set(args.chapters.split(','))
+        chapters = filter(lambda c: c['oid'] in of_interest, chapters)
+        chapters = tuple(chapters)
+
+    return chapters
+
+
+def main():
+    argparser = create_argparser()
+    args = argparser.parse_args()
     series_info_url = make_series_info_uri(args.series)
     series_info_json: dict = requests.get(series_info_url).json()
     series_info: dict = series_info_json['data']
@@ -36,14 +49,7 @@ def main(args):
         with open(series_info_filepath, "w") as fs:
             json.dump(series_info, fs)
 
-    chapters = series_info['chapters']
-
-    if args.chapters:
-        of_interest = set(args.chapters.split(','))
-        chapters = filter(lambda c: c['oid'] in of_interest, chapters)
-        chapters = tuple(chapters)
-
-    for chapter in chapters:
+    for chapter in get_chapters(args, series_info):
         chapter_name = chapter['name']
         chapter_name_secure = secure_filename(chapter_name)
         chapter_dirpath = os.path.join(series_dirpath, slugify(chapter_name_secure))
@@ -94,5 +100,4 @@ def create_argparser():
 
 
 if __name__ == '__main__':
-    argparser = create_argparser()
-    main(argparser.parse_args())
+    main()

@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
-from distutils.core import setup
+from setuptools import setup
 
 
 setup(
@@ -9,10 +9,13 @@ setup(
     description='Script to download mangarock comics',
     author='Italo Maia',
     author_email='',
+    packages=['mangarock'],
     install_requires=[
         'python-slugify==2.0.1',
         'requests==2.19.1',
         'Werkzeug==0.14.1',
     ],
-    scripts=['mangarock.py']
+    entry_points={
+        'console_scripts': ['mangarock = mangarock.main:main']
+    }
 )

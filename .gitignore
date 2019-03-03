@@ -1,4 +1,7 @@
-venv
+venv/
+build/
+dist/
+*.egg-info/
 *.json
 *.mri
 *.pyc
