@@ -8,7 +8,7 @@ pip install -e git+https://github.com/italomaia/mangarock.py#egg=master
 
 ## Usage
 
-```fish
+```bash
 > mangarock mrs-serie-74620  # download full comic
 > mangarock mrs-serie-74620 -c mrs-chapter-74622  # download one chapter
 ```
