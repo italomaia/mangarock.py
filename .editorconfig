@@ -7,6 +7,9 @@ charset = utf-8
 trim_trailing_whitespace = false
 insert_final_newline = false
 
+[Makefile]
+indent_style = tab
+
 [*.{lua,py}]
 trim_trailing_whitespace = true
 insert_final_newline = true
