@@ -1,0 +1,3 @@
+https://jsfiddle.net/wcg2fa63/
+https://github.com/MinusGix/MangarockDownloader/blob/master/smallMangaRock.js
+https://github.com/inorichi/tachiyomi-extensions/issues/99
