@@ -2,7 +2,13 @@ import argparse
 import json
 import os.path
 import requests
-from mri_to_webp import parse_mri_data_to_webp_buffer
+
+try:
+    from mri_to_webp import parse_mri_data_to_webp_buffer
+except ImportError:
+    # yeap, I'm going full lazy here
+    from mangarock.mri_to_webp import parse_mri_data_to_webp_buffer
+
 from random import choice
 from slugify import slugify
 from time import sleep
@@ -24,8 +30,8 @@ def get_chapters(args, series_info):
     chapters = series_info['chapters']
 
     if args.chapters:
-        of_interest = set(args.chapters.split(','))
-        chapters = filter(lambda c: c['oid'] in of_interest, chapters)
+        of_interest = set(map(int, args.chapters.split(',')))
+        chapters = filter(lambda c: c['order'] in of_interest, chapters)
         chapters = tuple(chapters)
 
     return chapters
@@ -95,7 +101,7 @@ def main():
 def create_argparser():
     parser = argparse.ArgumentParser()
     parser.add_argument('series', help='series oid')
-    parser.add_argument('-c', '--chapters', nargs='?', help='comma separated chapter oid list')
+    parser.add_argument('-c', '--chapters', nargs='?', help='comma separated chapter index list')
     return parser
 
 
