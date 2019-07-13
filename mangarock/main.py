@@ -59,6 +59,11 @@ def main():
         chapter_name = chapter['name']
         chapter_name_secure = secure_filename(chapter_name)
         chapter_dirpath = os.path.join(series_dirpath, slugify(chapter_name_secure))
+        chapter_cbz_filepath = f"{chapter_dirpath}.cbz"
+
+        if os.path.exists(chapter_cbz_filepath):
+            print(f"{chapter_cbz_filepath} found; chapter will not be downloaded")
+            continue
 
         if not os.path.exists(chapter_dirpath):
             os.mkdir(chapter_dirpath)
