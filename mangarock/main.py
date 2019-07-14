@@ -39,6 +39,36 @@ def get_chapters(args, series_info):
     return chapters
 
 
+def convert_to_png(filepath, png_filepath):
+    try:
+        run(["dwebp", "-quiet", filepath, "-o", png_filepath], check=True)
+
+        print(f"{png_filepath} written to file")
+        os.remove(filepath)  # we don't leave dirt behind
+    except CalledProcessError:
+        print("Could not create png image; do you have dwebp installed?")
+
+
+def download_webp(mri_url, filepath):
+    for i in range(3):
+        mri_buffer = requests.get(mri_url).content
+
+        if len(mri_buffer) > 0:
+            break  # we got our data!
+
+    # nothing to write
+    if len(mri_buffer) == 0:
+        return False
+
+    webp_buffer = parse_mri_data_to_webp_buffer(mri_buffer)
+
+    # writes the image
+    with open(filepath, "wb") as fs:
+        fs.write(bytes(webp_buffer))
+
+    return True
+
+
 def main():
     argparser = create_argparser()
     args = argparser.parse_args()
@@ -74,50 +104,42 @@ def main():
         chapter_data_url = make_chapter_data_uri(chapter['oid'])
         chapter_data = requests.get(chapter_data_url).json()
 
+        # at least one image download failed?
         has_failed_download = False
 
         for index, mri_url in enumerate(chapter_data['data']):
             filename = f"{index:03}.webp"
             filepath = os.path.join(chapter_dirpath, filename)
 
+            webp_exists = os.path.exists(filepath) and (os.path.getsize(filepath) > 0)
+
             png_filename = f"{index:03}.png"
             png_filepath = os.path.join(chapter_dirpath, png_filename)
 
-            if use_png:
-                if os.path.exists(png_filepath) and (os.path.getsize(png_filepath) > 0):
-                    print(f"skipping {png_filename}")
-                    continue
-            elif os.path.exists(filepath) and (os.path.getsize(filepath) > 0):
-                    print(f"skipping {filename}")
-                    continue
+            png_exists =\
+                use_png and\
+                os.path.exists(png_filepath) and\
+                (os.path.getsize(png_filepath) > 0)
 
-            for i in range(3):
-                mri_buffer = requests.get(mri_url).content
-
-                if len(mri_buffer) > 0:
-                    break
-
-            # nothing to write
-            if len(mri_buffer) == 0:
-                has_failed_download = True
+            if use_png and png_exists:
+                print(f"skipping {png_filename}")
                 continue
 
-            webp_buffer = parse_mri_data_to_webp_buffer(mri_buffer)
+            if not use_png and webp_exists:
+                print(f"skipping {filename}")
+                continue
 
-            # writes the image
-            with open(filepath, "wb") as fs:
-                fs.write(bytes(webp_buffer))
+            download_ok = True
 
-            print(f"{filepath} written to file")
-
-            try:
-                if use_png:
-                    run(["dwebp", "-quiet", filepath, "-o", png_filepath], check=True)
-
+            if not webp_exists:
+                if download_webp(mri_url, filepath):
                     print(f"{filepath} written to file")
-                    os.remove(filepath)  # we don't leave dirt behind
-            except CalledProcessError:
-                print("Could not create png image; do you have dwebp installed?")
+                else:
+                    download_ok = False
+                    has_failed_download = True
+
+            if use_png and download_ok:
+                convert_to_png(filepath, png_filepath)
 
             sleep(choice([0.1, 0.2, 0.3, 0.4, 0.5]))
 
