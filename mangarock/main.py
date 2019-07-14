@@ -185,9 +185,11 @@ def main():
                 continue
 
             download_ok = True
+            has_downloaded = False
 
             if not webp_exists:
                 if download_webp(mri_url, filepath):
+                    has_downloaded = True
                     print(f"{filepath} written to file")
                 else:
                     download_ok = False
@@ -198,7 +200,8 @@ def main():
             elif use_jpg and download_ok:
                 convert_to_jpg(filepath, png_exists, png_filepath, jpg_filepath)
 
-            sleep(choice([0.1, 0.2, 0.3, 0.4, 0.5]))
+            if has_downloaded:
+                sleep(choice([0.1, 0.2, 0.3, 0.4, 0.5]))
 
         print(f"{chapter_name_secure} downloaded" + (has_failed_download and ' [fail]' or ''))
 
