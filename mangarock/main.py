@@ -2,6 +2,8 @@ import argparse
 import json
 import os.path
 import requests
+from subprocess import run
+from subprocess import CalledProcessError
 
 try:
     from mri_to_webp import parse_mri_data_to_webp_buffer
@@ -40,6 +42,7 @@ def get_chapters(args, series_info):
 def main():
     argparser = create_argparser()
     args = argparser.parse_args()
+    use_png = args.png  # no webp in this house, mister!
     series_info_url = make_series_info_uri(args.series)
     series_info_json: dict = requests.get(series_info_url).json()
     series_info: dict = series_info_json['data']
@@ -77,9 +80,16 @@ def main():
             filename = f"{index:03}.webp"
             filepath = os.path.join(chapter_dirpath, filename)
 
-            if os.path.exists(filepath) and (os.path.getsize(filepath) > 0):
-                print(f"skipping {filename}")
-                continue
+            png_filename = f"{index:03}.png"
+            png_filepath = os.path.join(chapter_dirpath, png_filename)
+
+            if use_png:
+                if os.path.exists(png_filepath) and (os.path.getsize(png_filepath) > 0):
+                    print(f"skipping {png_filename}")
+                    continue
+            elif os.path.exists(filepath) and (os.path.getsize(filepath) > 0):
+                    print(f"skipping {filename}")
+                    continue
 
             for i in range(3):
                 mri_buffer = requests.get(mri_url).content
@@ -94,10 +104,21 @@ def main():
 
             webp_buffer = parse_mri_data_to_webp_buffer(mri_buffer)
 
+            # writes the image
             with open(filepath, "wb") as fs:
                 fs.write(bytes(webp_buffer))
 
             print(f"{filepath} written to file")
+
+            try:
+                if use_png:
+                    run(["dwebp", "-quiet", filepath, "-o", png_filepath], check=True)
+
+                    print(f"{filepath} written to file")
+                    os.remove(filepath)  # we don't leave dirt behind
+            except CalledProcessError:
+                print("Could not create png image; do you have dwebp installed?")
+
             sleep(choice([0.1, 0.2, 0.3, 0.4, 0.5]))
 
         print(f"{chapter_name_secure} downloaded" + (has_failed_download and ' [fail]' or ''))
@@ -107,6 +128,7 @@ def create_argparser():
     parser = argparse.ArgumentParser()
     parser.add_argument('series', help='series oid')
     parser.add_argument('-c', '--chapters', nargs='?', help='comma separated chapter index list')
+    parser.add_argument('-p', '--png', action="store_true", help='save images as png')
     return parser
 
 
