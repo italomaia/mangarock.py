@@ -12,6 +12,7 @@ pip install -e git+https://github.com/italomaia/mangarock.py#egg=master
 > mangarock mrs-serie-74620  # download full comic
 > mangarock mrs-serie-74620 -c 0  # download first chapter as webp images
 > mangarock mrs-serie-74620 -p -c 0  # download first chapter as png images
+> mangarock mrs-serie-74620 -s  # show info about the series
 ```
 
 ## Dockerfile usage

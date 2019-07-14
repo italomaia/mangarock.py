@@ -68,11 +68,35 @@ def download_webp(mri_url, filepath):
 
     return True
 
+def show_info_cmd(series_info):
+    for key in sorted(series_info.keys()):
+        value = series_info[key]
+
+        if key in (
+            'chapters', 'extra', 'characters',
+            'categories', 'authors', 'artworks',
+            'cover'
+        ):
+            continue
+
+        print("%15s: " % key, end='')
+
+        if key == 'rich_categories':
+            print(', '.join(sorted(map(lambda v: v['name'], value))))
+        elif key == 'direction':
+            print(value == 1 and 'RL' or 'LR')
+        elif type(value) == list:
+            print(', '.join(value))
+        else:
+            print(value)
+
 
 def main():
     argparser = create_argparser()
     args = argparser.parse_args()
     use_png = args.png  # no webp in this house, mister!
+    show_info = args.show
+
     series_info_url = make_series_info_uri(args.series)
     series_info_json: dict = requests.get(series_info_url).json()
     series_info: dict = series_info_json['data']
@@ -87,6 +111,10 @@ def main():
     if not os.path.exists(series_info_filepath):
         with open(series_info_filepath, "w") as fs:
             json.dump(series_info, fs)
+
+    if show_info:
+        show_info_cmd(series_info)
+        exit(0)
 
     for chapter in get_chapters(args, series_info):
         chapter_name = chapter['name']
@@ -151,6 +179,7 @@ def create_argparser():
     parser.add_argument('series', help='series oid')
     parser.add_argument('-c', '--chapters', nargs='?', help='comma separated chapter index list')
     parser.add_argument('-p', '--png', action="store_true", help='save images as png')
+    parser.add_argument('-s', '--show', action='store_true', help='show manga info')
     return parser
 
 
