@@ -5,7 +5,7 @@ from setuptools import setup
 
 setup(
     name='Mangarock',
-    version='1.2',
+    version='1.3',
     description='Script to download mangarock comics',
     author='Italo Maia',
     author_email='',

@@ -39,6 +39,20 @@ def get_chapters(args, series_info):
     return chapters
 
 
+def convert_to_jpg(filepath, png_exists, png_filepath, jpg_filepath):
+    try:
+        if not png_exists:
+            run(["dwebp", "-quiet", filepath, "-o", png_filepath], check=True)
+
+        run(['convert', png_filepath, jpg_filepath], check=True)
+
+        print(f"{jpg_filepath} written to file")
+        os.remove(filepath)  # we don't leave dirt behind
+        os.remove(png_filepath)
+    except CalledProcessError:
+        print("Could not create jpg image; do you have imagemagick AND dwebp installed?")
+
+
 def convert_to_png(filepath, png_filepath):
     try:
         run(["dwebp", "-quiet", filepath, "-o", png_filepath], check=True)
@@ -95,6 +109,7 @@ def main():
     argparser = create_argparser()
     args = argparser.parse_args()
     use_png = args.png  # no webp in this house, mister!
+    use_jpg = args.jpg  # no webp in this house, mister!
     show_info = args.show
 
     series_info_url = make_series_info_uri(args.series)
@@ -149,11 +164,23 @@ def main():
                 os.path.exists(png_filepath) and\
                 (os.path.getsize(png_filepath) > 0)
 
+            jpg_filename = f"{index:03}.jpg"
+            jpg_filepath = os.path.join(chapter_dirpath, jpg_filename)
+
+            jpg_exists =\
+                use_jpg and\
+                os.path.exists(jpg_filepath) and\
+                (os.path.getsize(jpg_filepath) > 0)
+
             if use_png and png_exists:
                 print(f"skipping {png_filename}")
                 continue
 
-            if not use_png and webp_exists:
+            if use_jpg and jpg_exists:
+                print(f"skipping {jpg_filename}")
+                continue
+
+            if not use_png and not use_jpg and webp_exists:
                 print(f"skipping {filename}")
                 continue
 
@@ -168,6 +195,8 @@ def main():
 
             if use_png and download_ok:
                 convert_to_png(filepath, png_filepath)
+            elif use_jpg and download_ok:
+                convert_to_jpg(filepath, png_exists, png_filepath, jpg_filepath)
 
             sleep(choice([0.1, 0.2, 0.3, 0.4, 0.5]))
 
@@ -179,6 +208,7 @@ def create_argparser():
     parser.add_argument('series', help='series oid')
     parser.add_argument('-c', '--chapters', nargs='?', help='comma separated chapter index list')
     parser.add_argument('-p', '--png', action="store_true", help='save images as png')
+    parser.add_argument('-j', '--jpg', action="store_true", help='save images as jpg')
     parser.add_argument('-s', '--show', action='store_true', help='show manga info')
     return parser
 
