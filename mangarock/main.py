@@ -82,6 +82,7 @@ def download_webp(mri_url, filepath):
 
     return True
 
+
 def show_info_cmd(series_info):
     for key in sorted(series_info.keys()):
         value = series_info[key]
