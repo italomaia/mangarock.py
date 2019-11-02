@@ -13,7 +13,7 @@ setup(
     install_requires=[
         'python-slugify==2.0.1',
         'requests>=2.20.0',
-        'Werkzeug==0.14.1',
+        'Werkzeug==0.15.3',
     ],
     entry_points={
         'console_scripts': ['mangarock = mangarock.main:main']
